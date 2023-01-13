@@ -4281,7 +4281,7 @@ static int subsys_is_on(enum subsys_id id)
 }
 
 #if CONTROL_LIMIT
-int allow1[NR_SYSS] = {
+int allow[NR_SYSS] = {
 1,/*SYS_MD1*/
 1,/*SYS_CONN*/
 1,/*SYS_MFG0*/
@@ -4343,7 +4343,7 @@ static int enable_subsys(enum subsys_id id, enum mtcmos_op action)
 	pr_notice("[CCF] %s: sys=%s, id=%d, action = %s\n",
 		__func__, sys->name, id, action?"PWN":"BUS_PROT");
 	#endif
-	if (allow1[id] == 0) {
+	if (allow[id] == 0) {
 		#if MT_CCF_DEBUG
 		pr_debug("[CCF] %s: do nothing return\n", __func__);
 		#endif
@@ -4392,7 +4392,7 @@ static int disable_subsys(enum subsys_id id, enum mtcmos_op action)
 	pr_notice("[CCF] %s: sys=%s, id=%d, action = %s\n",
 		__func__, sys->name, id, action?"PWN":"BUS_PROT");
 	#endif
-	if (allow1[id] == 0) {
+	if (allow[id] == 0) {
 		#if MT_CCF_DEBUG
 		pr_debug("[CCF] %s: do nothing return\n", __func__);
 		#endif
