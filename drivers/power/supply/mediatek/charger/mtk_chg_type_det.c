@@ -107,7 +107,10 @@ static int mt_charger_online(struct mt_charger *mtk_chg)
 		if (boot_mode == KERNEL_POWER_OFF_CHARGING_BOOT ||
 		    boot_mode == LOW_POWER_OFF_CHARGING_BOOT) {
 			pr_notice("%s: Unplug Charger/USB\n", __func__);
-//			kernel_power_off();
+			pr_notice("%s: system_state=%d\n", __func__,
+				system_state);
+			if (system_state != SYSTEM_POWER_OFF)
+				kernel_power_off();
 		}
 	}
 
@@ -393,7 +396,7 @@ static enum power_supply_property mt_usb_properties[] = {
 static void tcpc_power_off_work_handler(struct work_struct *work)
 {
 	pr_info("%s\n", __func__);
-//	kernel_power_off();
+	kernel_power_off();
 }
 
 static void charger_in_work_handler(struct work_struct *work)

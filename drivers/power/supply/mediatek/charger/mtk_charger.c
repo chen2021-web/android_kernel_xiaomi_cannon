@@ -1101,7 +1101,6 @@ void do_sw_jeita_state_machine(struct charger_manager *info)
 
 	sw_jeita = &info->sw_jeita;
 	sw_jeita->pre_sm = sw_jeita->sm;
-	sw_jeita->pre_cv = sw_jeita->cv;
 	sw_jeita->charging = true;
 
 	/* JEITA battery temp Standard */
@@ -1111,7 +1110,6 @@ void do_sw_jeita_state_machine(struct charger_manager *info)
 
 		sw_jeita->sm = TEMP_ABOVE_T4;
 		sw_jeita->charging = false;
-		info->data.ac_charger_current = 0;
 	} else if (info->battery_temp > info->data.temp_t3_thres) {
 		/* control 45 degree to normal behavior */
 		if ((sw_jeita->sm == TEMP_ABOVE_T4)
@@ -1128,9 +1126,6 @@ void do_sw_jeita_state_machine(struct charger_manager *info)
 				info->data.temp_t4_thres);
 
 			sw_jeita->sm = TEMP_T3_TO_T4;
-			info->data.ac_charger_current = 2450000; //0.5c 2450ma
-			info->data.pd_charger_current = 2450000; //0.5c 2450ma
-			info->data.charging_host_charger_current = 1500000;
 		}
 	} else if (info->battery_temp >= info->data.temp_t2_thres) {
 		if (((sw_jeita->sm == TEMP_T3_TO_T4)
@@ -1145,9 +1140,6 @@ void do_sw_jeita_state_machine(struct charger_manager *info)
 				info->data.temp_t2_thres,
 				info->data.temp_t3_thres);
 			sw_jeita->sm = TEMP_T2_TO_T3;
-			info->data.ac_charger_current = 3000000;
-			info->data.pd_charger_current = 3000000;
-			info->data.charging_host_charger_current = 1500000;
 		}
 	} else if (info->battery_temp >= info->data.temp_t1_thres) {
 		if ((sw_jeita->sm == TEMP_T0_TO_T1
@@ -1171,9 +1163,6 @@ void do_sw_jeita_state_machine(struct charger_manager *info)
 				info->data.temp_t2_thres);
 
 			sw_jeita->sm = TEMP_T1_TO_T2;
-			info->data.ac_charger_current = 2450000; //0.5c 2450ma
-			info->data.pd_charger_current = 2450000; //0.5c 2450ma
-			info->data.charging_host_charger_current = 1500000;
 		}
 	} else if (info->battery_temp >= info->data.temp_t0_thres) {
 		if ((sw_jeita->sm == TEMP_BELOW_T0)
@@ -1190,16 +1179,12 @@ void do_sw_jeita_state_machine(struct charger_manager *info)
 				info->data.temp_t1_thres);
 
 			sw_jeita->sm = TEMP_T0_TO_T1;
-			info->data.ac_charger_current = 980000; //0.2c 980ma
-			info->data.pd_charger_current = 980000; //0.2c 980ma
-			info->data.charging_host_charger_current = 980000; //0.2c 980ma
 		}
 	} else {
 		chr_err("[SW_JEITA] Battery below low Temperature(%d) !!\n",
 			info->data.temp_t0_thres);
 		sw_jeita->sm = TEMP_BELOW_T0;
 		sw_jeita->charging = false;
-		info->data.ac_charger_current = 0;
 	}
 
 	/* set CV after temperature changed */
@@ -1225,7 +1210,7 @@ void do_sw_jeita_state_machine(struct charger_manager *info)
 
 	chr_err("[SW_JEITA]preState:%d newState:%d tmp:%d cv:%d\n",
 		sw_jeita->pre_sm, sw_jeita->sm, info->battery_temp,
-		sw_jeita->cv, info->data.ac_charger_current);
+		sw_jeita->cv);
 }
 
 static ssize_t show_sw_jeita(struct device *dev, struct device_attribute *attr,
@@ -2102,7 +2087,10 @@ static void kpoc_power_off_check(struct charger_manager *info)
 			vbus = battery_get_vbus();
 			if (vbus >= 0 && vbus < 2500 && !mt_charger_plugin()) {
 				chr_err("Unplug Charger/USB in KPOC mode, shutdown\n");
-//					kernel_power_off();
+				chr_err("%s: system_state=%d\n", __func__,
+					system_state);
+				if (system_state != SYSTEM_POWER_OFF)
+					kernel_power_off();
 			}
 		}
 	}
